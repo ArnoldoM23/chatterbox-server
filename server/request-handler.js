@@ -12,6 +12,7 @@ this file and include it in basic-server.js so that it actually works.
 
 **************************************************************/
 
+    var datas = [];
 var requestHandler = function(request, response) {
   // Request and Response come from node's http module.
   //
@@ -32,31 +33,30 @@ var requestHandler = function(request, response) {
 
   if(request.method === 'POST'){
     var statusCode = 201;
+    var headers = defaultCorsHeaders;
+    headers['Content-Type'] = "application/json";
 
-  // See the note below about CORS headers.
-  var headers = defaultCorsHeaders;
-  // request.type('application/json')
-  // Tell the client we are sending them plain text.
-  //
-  // You will need to change this if you are sending something
-  // other than plain text, like JSON or HTML.
-  headers['Content-Type'] = "application/json";
+    response.writeHead(statusCode, headers);
 
 
-  // .writeHead() writes to the request line and headers of the response,
-  // which includes the status and all headers.
-  response.writeHead(statusCode, headers);
+    request.on('data', function(data){
+      datas.push(data.toString())
+    }).on('end', function(){
+      response.write(JSON.stringify({body:"Hello, World!", results: datas}))
+      response.end();
+    })
 
-  // Make sure to always call response.end() - Node may not send
-  // anything back to the client until you do. The string you pass to
-  // response.end() will be the body of the response - i.e. what shows
-  // up in the browser.
-  //
-  // Calling .end "flushes" the response's internal buffer, forcing
-  // node to actually send all the data over to the client.
-  response.end(JSON.stringify({body:"Hello, World!", results: []}));
+    console.log("datas outside...", datas)
+
   } else {
-    console.log("request......",request.url)
+    if(request.url === "/arglebargle"){
+      var statusCode = 404;
+      var headers = defaultCorsHeaders;
+      headers['Content-Type'] = "application/json";
+      console.log("datas....",datas)
+      response.writeHead(statusCode, headers);
+      response.end(JSON.stringify({body:"Hello, World!", results: datas}));
+    }
   // The outgoing status.
   var statusCode = 200;
 
@@ -81,7 +81,7 @@ var requestHandler = function(request, response) {
   //
   // Calling .end "flushes" the response's internal buffer, forcing
   // node to actually send all the data over to the client.
-  response.end(JSON.stringify({body:"Hello, World!", results: []}));
+  response.end(JSON.stringify({body:"Hello, World!", results: datas}));
    }
 };
 
