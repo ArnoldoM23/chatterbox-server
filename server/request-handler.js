@@ -12,7 +12,7 @@ this file and include it in basic-server.js so that it actually works.
 
 **************************************************************/
 
-    var datas = [];
+var datas = [{url:'/classes/messages', results:[]}];
 var requestHandler = function(request, response) {
   // Request and Response come from node's http module.
   //
@@ -31,6 +31,7 @@ var requestHandler = function(request, response) {
   // console.log("response.....", response.hasOwnProperty(results))
   console.log("Serving request type " + request.method + " for url " + request.url);
 
+
   if(request.method === 'POST'){
     var statusCode = 201;
     var headers = defaultCorsHeaders;
@@ -39,23 +40,32 @@ var requestHandler = function(request, response) {
     response.writeHead(statusCode, headers);
 
 
+
+    var message = ''
     request.on('data', function(data){
-      datas.push(data.toString())
-    }).on('end', function(){
-      response.write(JSON.stringify({body:"Hello, World!", results: datas}))
-      response.end();
+      message += data;
+    })
+    request.on('end', function(){
+      // datas = Buffer.concat(datas).toString();
+      // response.write(JSON.stringify({body:"Hello, World!", results: datas}))
+      if(request.url === '/classes/messages' ){
+        datas[0].results.push(message);
+        console.log("inside if on POST", datas[0])
+        response.end(JSON.stringify(datas[0]));
+      }
+      
+     
     })
 
-    console.log("datas outside...", datas)
+   
 
   } else {
     if(request.url === "/arglebargle"){
       var statusCode = 404;
       var headers = defaultCorsHeaders;
       headers['Content-Type'] = "application/json";
-      console.log("datas....",datas)
       response.writeHead(statusCode, headers);
-      response.end(JSON.stringify({body:"Hello, World!", results: datas}));
+     response.end();
     }
   // The outgoing status.
   var statusCode = 200;
@@ -78,10 +88,14 @@ var requestHandler = function(request, response) {
   // anything back to the client until you do. The string you pass to
   // response.end() will be the body of the response - i.e. what shows
   // up in the browser.
-  //
+   if(request.url === '/classes/messages' ){
+      console.log('inside if of get', datas[0])
+      console.log('response body', JSON.stringify(datas))
+      response.end(JSON.stringify(datas[0]));
+    }
   // Calling .end "flushes" the response's internal buffer, forcing
   // node to actually send all the data over to the client.
-  response.end(JSON.stringify({body:"Hello, World!", results: datas}));
+  // response.end(JSON.stringify());
    }
 };
 
