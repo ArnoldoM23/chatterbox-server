@@ -12,6 +12,41 @@ this file and include it in basic-server.js so that it actually works.
 
 **************************************************************/
 
+var messages = { results: [] }
+var requestHandler = function(request, response) {
+
+  var statusCode = 200;
+
+  if(request.url === "/classes/messages" || request.url === "/classes/room1") {
+    if(request.method === 'POST'){
+      var statusCode = 201;
+      var body = [];
+      request.on("data", function(chunk){
+        body.push(chunk);
+      });
+      request.on('end', function(){
+        body = JSON.parse(body.toString());
+        console.log('body after parse', body)
+        messages.results.push(body);
+      });
+    }
+  } else {
+    statusCode = 404;
+  }
+
+
+  var headers = defaultCorsHeaders;
+
+  headers['Content-Type'] = "application/json";
+
+  response.writeHead(statusCode, headers);
+  console.log(messages)
+  response.end(JSON.stringify(messages));
+
+}
+
+
+/*
 var datas = [{url:'/classes/messages', results:[]}];
 var requestHandler = function(request, response) {
   // Request and Response come from node's http module.
@@ -98,6 +133,7 @@ var requestHandler = function(request, response) {
   // response.end(JSON.stringify());
    }
 };
+*/
 
 // These headers will allow Cross-Origin Resource Sharing (CORS).
 // This code allows this server to talk to websites that
@@ -115,6 +151,6 @@ var defaultCorsHeaders = {
   "access-control-max-age": 10 // Seconds.
 };
 
-module.exports = requestHandler;
+exports.requestHandler = requestHandler;
 
 // exports.requestHandler = requestHandler; 
